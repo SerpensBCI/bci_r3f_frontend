@@ -1,7 +1,7 @@
-import { cloneElement, useState } from "react"
+import { cloneElement, useState, useEffect } from "react"
 import { Footer } from "@pmndrs/branding"
 
-export default function Intro({ children }) {
+export default function Intro({ children, onGameStart, onGameEnd }) {
   const [clicked, setClicked] = useState(false)
   const [difficulty, setDifficulty] = useState(null)
   const [key, setKey] = useState(0) // Key to force re-render of App component
@@ -9,17 +9,36 @@ export default function Intro({ children }) {
   const handleDifficultySelect = (selectedDifficulty) => {
     setDifficulty(selectedDifficulty)
     setClicked(true)
+    // Call onGameStart when game actually starts (after difficulty selection and click to continue)
   }
   
   const handleRestart = () => {
     setKey(prev => prev + 1) // Force App component to re-render
+    if (onGameEnd) onGameEnd() // Show header when restarting
   }
   
   const handleHome = () => {
     setClicked(false)
     setDifficulty(null)
     setKey(prev => prev + 1)
+    if (onGameEnd) onGameEnd() // Show header when going home
   }
+  
+  const handleContinue = () => {
+    setClicked(true)
+    if (onGameStart) onGameStart() // Hide header when game actually starts
+  }
+  
+  // Monitor when the game is actually running
+  useEffect(() => {
+    if (clicked && difficulty) {
+      // Game is running, hide header
+      if (onGameStart) onGameStart()
+    } else if (!clicked && difficulty) {
+      // Game is paused/stopped, show header
+      if (onGameEnd) onGameEnd()
+    }
+  }, [clicked, difficulty, onGameStart, onGameEnd])
   
   return (
     <div className="container">
@@ -61,7 +80,7 @@ export default function Intro({ children }) {
               </div>
             </div>
           ) : (
-            <a href="#" onClick={() => setClicked(true)}>
+            <a href="#" onClick={handleContinue}>
               {"click to continue"}
             </a>
           )}

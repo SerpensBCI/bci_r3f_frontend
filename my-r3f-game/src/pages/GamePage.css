@@ -1,0 +1,80 @@
+.game-page {
+  width: 100%;
+  height: 100vh;
+  background: #000;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  overflow: hidden;
+}
+
+.game-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.back-button {
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: white;
+}
+
+.game-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.game-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+}
+
+/* When header is hidden, make game container full height */
+.game-page:not(:has(.game-header)) .game-container {
+  height: 100vh;
+}
+
+/* Ensure the game takes full space */
+.game-container .container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .game-header {
+    padding: 15px;
+  }
+  
+  .game-title {
+    font-size: 1.2rem;
+  }
+  
+  .back-button {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+  }
+}

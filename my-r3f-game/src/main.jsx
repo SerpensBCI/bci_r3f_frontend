@@ -1,12 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
-import App from './App.jsx'
 import "./styles.css"
-import Intro from './intro.jsx'
+import HomePage from './pages/HomePage.jsx'
+import GamePage from './pages/GamePage.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <Intro>
-    <App />
-  </Intro>,
+  <StrictMode>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/pingpong" element={<GamePage />} />
+      </Routes>
+    </BrowserRouter>
+  </StrictMode>,
 )
