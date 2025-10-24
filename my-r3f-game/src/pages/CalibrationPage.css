@@ -181,30 +181,93 @@
   transform: translateY(0);
 }
 
-/* Mode Indicator */
-.mode-indicator {
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
+/* Pause Menu Overlay */
+.pause-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.mode-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
+.pause-menu {
+  background-color: #1a1a1a;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  min-width: 300px;
+}
+
+.pause-title {
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin: 0 0 2rem 0;
+  color: #ffffff;
+}
+
+.pause-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pause-btn {
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
   font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
   letter-spacing: 1px;
 }
 
-.mode-badge.calibration {
-  background-color: #2196F3;
+.pause-btn:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.pause-btn:active {
+  transform: translateY(0);
+}
+
+.pause-btn.return {
+  background-color: #4CAF50;
   color: #ffffff;
 }
 
-.mode-badge.training {
-  background-color: #FF9800;
+.pause-btn.return:hover {
+  background-color: #45a049;
+}
+
+.pause-btn.reset {
+  background-color: #F44336;
   color: #ffffff;
 }
+
+.pause-btn.reset:hover {
+  background-color: #da190b;
+}
+
+.pause-btn.home {
+  background-color: #2196F3;
+  color: #ffffff;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.pause-btn.home:hover {
+  background-color: #1976D2;
+}
+
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -226,11 +289,6 @@
   
   .instruction-text {
     font-size: 1rem;
-  }
-  
-  .mode-indicator {
-    position: static;
-    margin-top: 2rem;
   }
 }
 
