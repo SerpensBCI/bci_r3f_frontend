@@ -2,6 +2,15 @@
 
 A 3D ping pong game built with React Three Fiber, controlled via WebSocket.
 
+## Tech Stack
+
+- **Frontend**: Vite + React 18
+- **3D Engine**: Three.js + React Three Fiber
+- **Physics**: React Three Cannon + Rapier
+- **State Management**: Zustand + Valtio
+- **Backend**: Python WebSocket server
+- **Build Tool**: Vite
+
 ## Setup
 
 ### 1. Install Python dependencies
