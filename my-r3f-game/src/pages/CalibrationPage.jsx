@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import './CalibrationPage.css'
 
+const NO_KEY_TOKEN = '__NO_KEY__'
+
 const DIRECTIONS = ['↑', '↓', '←', '→', 'Rest']
 const DIRECTION_LABELS = {
   '↑': 'Up',
@@ -23,10 +25,13 @@ export default function CalibrationPage() {
   const [isShaking, setIsShaking] = useState(false)
   const [accuracyThreshold] = useState(0.7) // 70% accuracy threshold
   const [calibrationResults, setCalibrationResults] = useState([]) // Store calibration trial results
-
   const shakeTimeoutRef = useRef(null)
   const userInputRef = useRef(null)
-  const [lastKeyPressed, setLastKeyPressed] = useState(null)
+  const calibrationKeyCountsRef = useRef({}) // { [direction]: { [keyOrNoKey]: count } }
+  const [learnedDirToKey, setLearnedDirToKey] = useState({}) // direction -> key (or NO_KEY_TOKEN)
+  const [learnedKeyToDir, setLearnedKeyToDir] = useState({}) // key -> direction
+  const [mappingReady, setMappingReady] = useState(false)
+  const [mappingConflicts, setMappingConflicts] = useState(null)
 
   // Simulate accuracy (in real BCI, this would come from brain signal analysis)
   const simulateAccuracy = useCallback(() => {
@@ -46,17 +51,6 @@ export default function CalibrationPage() {
     }
   }, [])
 
-  // Map keyboard keys to direction symbols
-  const mapKeyToDirection = useCallback((key) => {
-    switch (key) {
-      case 'ArrowUp': return '↑'
-      case 'ArrowDown': return '↓'
-      case 'ArrowLeft': return '←'
-      case 'ArrowRight': return '→'
-      case ' ': return 'Rest' // Space bar for Rest
-      default: return null
-    }
-  }, [])
 
   // Screen shake animation
   const triggerShake = useCallback(() => {
@@ -71,103 +65,66 @@ export default function CalibrationPage() {
     }, 300)
   }, [])
 
-  // Analyze calibration results - study user-instruction patterns
+  // Analyze calibration results - report key frequencies and press rate
   const analyzeCalibrationResults = useCallback((results) => {
-    console.log('=== CALIBRATION ANALYSIS: USER-INSTRUCTION PATTERNS ===')
+    console.log('=== CALIBRATION ANALYSIS: USER KEY PATTERNS ===')
     console.log(`Total Trials: ${results.length}`)
     
-    // Study user-instruction patterns
-    console.log('\n--- USER-INSTRUCTION PATTERN ANALYSIS ---')
-    results.forEach((result, index) => {
-      console.log(`Trial ${result.trial}: Required=${result.requiredDirection} → User=${result.userDirection} (${result.isCorrect ? 'CORRECT' : 'INCORRECT'})`)
+    // Aggregate counts per required direction
+    const perDirCounts = { '↑': {}, '↓': {}, '←': {}, '→': {}, 'Rest': {} }
+    let pressedCount = 0
+    results.forEach(r => {
+      const key = r.keyPressed ?? NO_KEY_TOKEN
+      perDirCounts[r.requiredDirection][key] = (perDirCounts[r.requiredDirection][key] || 0) + 1
+      if (key !== NO_KEY_TOKEN) pressedCount++
     })
     
-    // Analyze user response patterns by required direction
-    console.log('\n--- USER RESPONSE PATTERNS BY REQUIRED DIRECTION ---')
-    const responsePatterns = {}
-    DIRECTIONS.forEach(requiredDir => {
-      const trials = results.filter(r => r.requiredDirection === requiredDir)
-      if (trials.length > 0) {
-        const userResponses = trials.map(t => t.userDirection)
-        const responseCounts = {}
-        userResponses.forEach(response => {
-          responseCounts[response] = (responseCounts[response] || 0) + 1
-        })
-        
-        responsePatterns[requiredDir] = responseCounts
-        console.log(`When required ${requiredDir}:`)
-        Object.entries(responseCounts).forEach(([response, count]) => {
-          const percentage = (count / trials.length) * 100
-          console.log(`  User responded ${response}: ${count}/${trials.length} (${percentage.toFixed(1)}%)`)
-        })
-      }
-    })
-    
-    // Find most common user responses
-    console.log('\n--- MOST COMMON USER RESPONSES ---')
-    const allUserResponses = results.map(r => r.userDirection)
-    const responseCounts = {}
-    allUserResponses.forEach(response => {
-      responseCounts[response] = (responseCounts[response] || 0) + 1
-    })
-    
-    const sortedResponses = Object.entries(responseCounts)
-      .sort(([,a], [,b]) => b - a)
-    
-    sortedResponses.forEach(([response, count]) => {
-      const percentage = (count / results.length) * 100
-      console.log(`${response}: ${count}/${results.length} (${percentage.toFixed(1)}%)`)
-    })
-    
-    // Analyze confusion patterns
-    console.log('\n--- CONFUSION PATTERNS ---')
-    const confusionMatrix = {}
-    DIRECTIONS.forEach(required => {
-      confusionMatrix[required] = {}
-      DIRECTIONS.forEach(userResponse => {
-        confusionMatrix[required][userResponse] = 0
+    Object.keys(perDirCounts).forEach(dir => {
+      const map = perDirCounts[dir]
+      const total = Object.values(map).reduce((a,b) => a+b, 0)
+      if (total === 0) return
+      console.log(`\nWhen required ${dir}:`)
+      Object.entries(map).sort((a,b)=>b[1]-a[1]).forEach(([key,count]) => {
+        const label = key === NO_KEY_TOKEN ? '(no key)' : key
+        console.log(`  Key "${label}": ${count}/${total} (${(count/total*100).toFixed(1)}%)`)
       })
     })
-    
-    results.forEach(result => {
-      confusionMatrix[result.requiredDirection][result.userDirection]++
-    })
-    
-    console.log('Confusion Matrix (Required → User):')
-    DIRECTIONS.forEach(required => {
-      console.log(`  ${required}:`)
-      DIRECTIONS.forEach(userResp => {
-        const count = confusionMatrix[required][userResp]
-        if (count > 0) {
-          const percentage = (count / results.filter(r => r.requiredDirection === required).length) * 100
-          console.log(`    → ${userResp}: ${count} (${percentage.toFixed(1)}%)`)
-        }
-      })
-    })
-    
-    // Calculate overall accuracy
-    const correctTrials = results.filter(r => r.isCorrect).length
-    const overallAccuracy = (correctTrials / results.length) * 100
-    console.log(`\nOverall Accuracy: ${overallAccuracy.toFixed(1)}%`)
-    
+    const overallPressRate = (pressedCount / results.length) * 100
+    console.log(`\nOverall "some key pressed" rate: ${overallPressRate.toFixed(1)}%`)
     console.log('=== END CALIBRATION ANALYSIS ===')
   }, [])
 
   // Handle trial completion
   const handleTrialComplete = useCallback(() => {
     const requiredDirection = currentTrialDirection // Use the stored trial direction
-    const userDirection = userInputRef.current ?? 'Rest'
+    const rawKey = userInputRef.current // could be undefined if user didn’t press any key
+    let userDirection = 'Rest'
+    if (mode === 'calibration') {
+      // During calibration, we only record the raw key (or no key)
+      const keyOrNoKey = rawKey ?? NO_KEY_TOKEN
+      // update per-direction counts
+      const bag = calibrationKeyCountsRef.current[requiredDirection] || (calibrationKeyCountsRef.current[requiredDirection] = {})
+      bag[keyOrNoKey] = (bag[keyOrNoKey] || 0) + 1
+      // For logging compatibility, set userDirection to 'Rest' when no key, otherwise 'Unknown (learning)'
+      userDirection = rawKey ? 'Unknown (learning)' : 'Rest'
+    } else {
+      // In training, map raw key to learned direction; if none, consider 'Unknown'
+      if (rawKey) {
+        userDirection = learnedKeyToDir[rawKey] || 'Unknown'
+      } else {
+        userDirection = 'Rest'
+      }
+    }
     const isCorrect = userDirection === requiredDirection
-    
     // Store trial result
     const trialResult = {
       trial: currentTrial,
       requiredDirection,
       userDirection,
+      keyPressed: rawKey || null,
       isCorrect,
       accuracyScore: isCorrect ? 100 : 0
     }
-    
     // Verify that visual guidance matches required guidance
     const visualGuidance = currentDirection
     const guidanceMatches = visualGuidance === requiredDirection
@@ -175,14 +132,12 @@ export default function CalibrationPage() {
     console.log(`  Visual Guidance (on screen): ${visualGuidance}`)
     console.log(`  Required Guidance (stored): ${requiredDirection}`)
     console.log(`  Guidance Matches: ${guidanceMatches ? 'YES' : 'NO'}`)
-    
     // Console logging for trial results
     console.log(`Trial ${currentTrial} Results:`)
     console.log(`  Required Direction: ${requiredDirection}`)
     console.log(`  User Direction: ${userDirection}`)
     console.log(`  Result: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`)
-    console.log(`  Captured Key (userDirection): ${userDirection}`)
-    
+    console.log(`  Captured Key: ${rawKey ?? '(no key)'}`)
     if (mode === 'training') {
       if (!isCorrect) {
         setFeedback('Try Again - Adjust Focus')
@@ -195,11 +150,9 @@ export default function CalibrationPage() {
       // Store calibration result
       setCalibrationResults(prev => [...prev, trialResult])
     }
-
     // Clear current direction first
     setCurrentDirection('')
     console.log('Trial', currentTrial, 'completed. Direction cleared.')
-
     // Move to next trial or finish
     if (currentTrial < totalTrials) {
       setCurrentTrial(prev => prev + 1)
@@ -215,13 +168,42 @@ export default function CalibrationPage() {
     } else {
       // All trials completed
       if (mode === 'calibration') {
+        // Derive mapping: for each direction, pick the most frequent key (or NO_KEY_TOKEN for Rest if most common)
+        const dirToKey = {}
+        const dirToKeyCount = {}
+        Object.keys(calibrationKeyCountsRef.current).forEach(dir => {
+          const entries = Object.entries(calibrationKeyCountsRef.current[dir] || {})
+          if (entries.length === 0) return
+          entries.sort((a,b) => b[1] - a[1])
+          const [bestKey, bestCount] = entries[0]
+          dirToKey[dir] = bestKey
+          dirToKeyCount[dir] = bestCount
+        })
+        // Invert: key -> direction (resolve conflicts by keeping the direction with higher count)
+        const keyToDir = {}
+        const keyBestCount = {}
+        Object.entries(dirToKey).forEach(([dir, key]) => {
+          const count = dirToKeyCount[dir] || 0
+          if (!keyToDir[key] || count > (keyBestCount[key] || 0)) {
+            keyToDir[key] = dir
+            keyBestCount[key] = count
+          } else {
+            // conflict: another direction already claimed this key with higher count
+            setMappingConflicts(prev => (prev || []))
+          }
+        })
+        setLearnedDirToKey(dirToKey)
+        setLearnedKeyToDir(keyToDir)
+        setMappingReady(true)
+        // Show mapping summary in feedback
+        const fmt = (k) => k === NO_KEY_TOKEN ? '(no key)' : `"${k}"`
+        const mappingSummary = ['↑','↓','←','→','Rest'].map(d => `${d}→${fmt(dirToKey[d] ?? '?')}`).join('  ')
+        setFeedback(`Calibration complete. Learned keys: ${mappingSummary}. Starting training...`)
         // Analyze calibration results before transitioning to training
         const finalResults = [...calibrationResults, trialResult]
         analyzeCalibrationResults(finalResults)
-        
         setMode('training')
         setCurrentTrial(1) // Start training with trial 1, not 0
-        setFeedback('Calibration complete. Starting training with sensory guidance.')
         // Set first training direction after delay
         setTimeout(() => {
           const nextDirection = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)]
@@ -236,10 +218,16 @@ export default function CalibrationPage() {
         setFeedback('Training complete!')
       }
     }
-  }, [mode, currentTrial, totalTrials, accuracyThreshold, simulateAccuracy, simulateUserDirection, triggerShake, currentTrialDirection, currentDirection, calibrationResults, analyzeCalibrationResults])
+  }, [mode, currentTrial, totalTrials, accuracyThreshold, simulateAccuracy, simulateUserDirection, triggerShake, currentTrialDirection, currentDirection, calibrationResults, analyzeCalibrationResults, learnedKeyToDir])
 
   // Start calibration/training
   const startSession = () => {
+    // Reset learned mapping and counts
+    calibrationKeyCountsRef.current = { '↑': {}, '↓': {}, '←': {}, '→': {}, 'Rest': {} }
+    setLearnedDirToKey({})
+    setLearnedKeyToDir({})
+    setMappingReady(false)
+    setMappingConflicts(null)
     userInputRef.current = null
     setIsRunning(true)
     setCurrentTrial(1)
@@ -284,23 +272,20 @@ export default function CalibrationPage() {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [isRunning])
 
-  // Capture user directional input (arrow keys and space) during a running, unpaused session
+  // Capture raw keyboard input during a running, unpaused session (no predefined mapping)
   useEffect(() => {
     const onKeyDown = (e) => {
       if (!isRunning || isPaused) return
-      const mapped = mapKeyToDirection(e.key)
-      if (mapped) {
-        userInputRef.current = mapped
-        setLastKeyPressed(mapped)
-        // Prevent the page from scrolling with arrow keys/space
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-          e.preventDefault()
-        }
+      // store first key pressed during the current trial (or overwrite to latest pressed)
+      userInputRef.current = e.key
+      // prevent default browser actions for common keys
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+        e.preventDefault()
       }
     }
     window.addEventListener('keydown', onKeyDown, { passive: false })
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isRunning, isPaused, mapKeyToDirection])
+  }, [isRunning, isPaused])
 
   // Auto-advance trials (simulate motor imagery duration)
   useEffect(() => {
@@ -329,11 +314,11 @@ export default function CalibrationPage() {
           <div className="instructions-section">
             {mode === 'calibration' ? (
               <p className="instruction-text">
-                Perform motor imagery as indicated. No feedback will be provided. Use arrow keys to respond (Space = Rest).
+                During calibration (first 10 trials), press the keys you prefer for each cue (e.g., WASD, IJKL, etc.). We will learn your mapping automatically. For "Rest", you may press nothing (no key) or any key you want to assign.
               </p>
             ) : (
               <p className="instruction-text">
-                Now training with sensory guidance. Focus on the indicated direction. Use arrow keys to respond (Space = Rest).
+                Now training with sensory guidance. Use the keys learned in calibration. If you press a key that wasn't learned, it will be treated as unknown.
               </p>
             )}
           </div>
