@@ -10,7 +10,10 @@ export default function DebugPanel({
   uiSettings, 
   controlSettings,
   controlStream,
-  onSettingsChange 
+  fpsData,
+  showFPS,
+  onSettingsChange,
+  onFPSToggle
 }) {
   const { count } = useSnapshot(state)
 
@@ -21,6 +24,35 @@ export default function DebugPanel({
       value: difficulty, 
       options: ['easy', 'medium', 'hard'],
       onChange: (value) => onSettingsChange?.('difficulty', value)
+    }
+  })
+
+  // FPS monitoring controls
+  const fpsControls = useControls('FPS Monitor', {
+    showFPS: { 
+      value: showFPS,
+      onChange: (value) => onFPSToggle?.(value)
+    },
+    currentFPS: { 
+      value: fpsData?.current || 0, 
+      min: 0, 
+      max: 120, 
+      step: 0.1, 
+      disabled: true 
+    },
+    averageFPS: { 
+      value: fpsData?.average || 0, 
+      min: 0, 
+      max: 120, 
+      step: 0.1, 
+      disabled: true 
+    },
+    frameCount: { 
+      value: fpsData?.frameCount || 0, 
+      min: 0, 
+      max: 10000, 
+      step: 1, 
+      disabled: true 
     }
   })
 

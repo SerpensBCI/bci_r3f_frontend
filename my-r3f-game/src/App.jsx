@@ -13,6 +13,7 @@ import bg from "./resources/bg.jpg"
 import { getDifficultySettings, getPhysicsSettings, getRenderingSettings, getUISettings, getControlSettings } from "./gameConfig"
 import DebugPanel from "./DebugPanel"
 import { useControlStream } from "./hooks/useControlStream"
+import { FPSOverlay } from "./components/FPSOverlay"
 
 const ping = new Audio(pingSound)
 export const state = proxy({
@@ -35,6 +36,8 @@ export const state = proxy({
 export default function App({ ready, difficulty = 'medium', onRestart, onHome }) {
   const [isPaused, setIsPaused] = useState(false)
   const [debugSettings, setDebugSettings] = useState({})
+  const [fpsData, setFpsData] = useState({ current: 0, average: 0, frameCount: 0 })
+  const [showFPS, setShowFPS] = useState(true)
   const controlStream = useControlStream()
   
   // Use configuration system to get settings
@@ -117,6 +120,16 @@ export default function App({ ready, difficulty = 'medium', onRestart, onHome })
     setIsPaused(false)
   }
   
+  // Handle FPS data updates
+  const handleFPSUpdate = (fps) => {
+    setFpsData(fps)
+  }
+  
+  // Handle FPS toggle
+  const handleFPSToggle = (value) => {
+    setShowFPS(value)
+  }
+  
   // Handle debug settings changes
   const handleDebugSettingsChange = (category, key, value) => {
     setDebugSettings(prev => {
@@ -149,6 +162,14 @@ export default function App({ ready, difficulty = 'medium', onRestart, onHome })
   
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    {/* FPS Overlay - HTML overlay not affected by 3D effects */}
+    <FPSOverlay 
+      enabled={ready && showFPS} 
+      updateInterval={1000} 
+      label="Ping Pong Game" 
+      onFPSUpdate={handleFPSUpdate}
+    />
+    
     {/* Debug panel - only shown when game is ready */}
     {ready && (
       <DebugPanel
@@ -159,7 +180,10 @@ export default function App({ ready, difficulty = 'medium', onRestart, onHome })
         uiSettings={uiSettings}
         controlSettings={controlSettings}
         controlStream={controlStream}
+        fpsData={fpsData}
+        showFPS={showFPS}
         onSettingsChange={handleDebugSettingsChange}
+        onFPSToggle={handleFPSToggle}
       />
     )}
       
