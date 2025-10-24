@@ -37,6 +37,11 @@
   position: relative;
 }
 
+/* Add top padding when progress bar is visible */
+.calibration-container.with-progress {
+  padding-top: 6rem;
+}
+
 /* Header */
 .calibration-header {
   margin-bottom: 3rem;
@@ -75,7 +80,14 @@
 
 /* Progress Section */
 .progress-section {
-  margin-bottom: 3rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 1rem 2rem;
+  z-index: 100;
+  margin-bottom: 0;
 }
 
 .progress-bar {
@@ -126,33 +138,6 @@
   letter-spacing: 1px;
 }
 
-/* Feedback Section */
-.feedback-section {
-  margin-bottom: 3rem;
-  min-height: 2rem;
-}
-
-.feedback-text {
-  font-size: 1.1rem;
-  font-weight: 500;
-  margin: 0;
-  transition: all 0.3s ease;
-}
-
-.feedback-text.success {
-  color: #4CAF50;
-}
-
-.feedback-text.error {
-  color: #F44336;
-  animation: pulse 0.5s ease-in-out;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
 
 /* Controls */
 .controls-section {
@@ -275,6 +260,14 @@
     padding: 1rem;
   }
   
+  .calibration-container.with-progress {
+    padding-top: 5rem;
+  }
+  
+  .progress-section {
+    padding: 0.8rem 1rem;
+  }
+  
   .calibration-title {
     font-size: 2rem;
   }
@@ -293,6 +286,14 @@
 }
 
 @media (max-width: 480px) {
+  .calibration-container.with-progress {
+    padding-top: 4.5rem;
+  }
+  
+  .progress-section {
+    padding: 0.6rem 0.8rem;
+  }
+  
   .direction-arrow {
     font-size: 4rem;
   }

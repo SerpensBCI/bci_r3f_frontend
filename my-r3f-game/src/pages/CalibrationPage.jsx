@@ -300,7 +300,7 @@ export default function CalibrationPage() {
 
   return (
     <div className={`calibration-page ${isShaking ? 'shaking' : ''}`}>
-      <div className="calibration-container">
+      <div className={`calibration-container ${isRunning ? 'with-progress' : ''}`}>
         {/* Header - only show when not running */}
         {!isRunning && (
           <header className="calibration-header">
@@ -337,22 +337,16 @@ export default function CalibrationPage() {
           </div>
         )}
 
-        {/* Direction Display */}
-        <div className="direction-section">
-          <div className="direction-cue">
-            <div className="direction-arrow">{currentDirection}</div>
-            <div className="direction-label">{DIRECTION_LABELS[currentDirection]}</div>
-          </div>
-        </div>
-
-        {/* Feedback Display */}
-        {feedback && (
-          <div className="feedback-section">
-            <p className={`feedback-text ${mode === 'training' && feedback.includes('Try Again') ? 'error' : 'success'}`}>
-              {feedback}
-            </p>
+        {/* Direction Display - only show when running */}
+        {isRunning && (
+          <div className="direction-section">
+            <div className="direction-cue">
+              <div className="direction-arrow">{currentDirection}</div>
+              <div className="direction-label">{DIRECTION_LABELS[currentDirection]}</div>
+            </div>
           </div>
         )}
+
 
         {/* Control Buttons */}
         <div className="controls-section">
