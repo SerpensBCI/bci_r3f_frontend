@@ -67,8 +67,6 @@ export default function CalibrationPage() {
 
   // Analyze calibration results - report key frequencies and press rate
   const analyzeCalibrationResults = useCallback((results) => {
-    console.log('=== CALIBRATION ANALYSIS: USER KEY PATTERNS ===')
-    console.log(`Total Trials: ${results.length}`)
     
     // Aggregate counts per required direction
     const perDirCounts = { '↑': {}, '↓': {}, '←': {}, '→': {}, 'Rest': {} }
@@ -83,15 +81,11 @@ export default function CalibrationPage() {
       const map = perDirCounts[dir]
       const total = Object.values(map).reduce((a,b) => a+b, 0)
       if (total === 0) return
-      console.log(`\nWhen required ${dir}:`)
       Object.entries(map).sort((a,b)=>b[1]-a[1]).forEach(([key,count]) => {
         const label = key === NO_KEY_TOKEN ? '(no key)' : key
-        console.log(`  Key "${label}": ${count}/${total} (${(count/total*100).toFixed(1)}%)`)
       })
     })
     const overallPressRate = (pressedCount / results.length) * 100
-    console.log(`\nOverall "some key pressed" rate: ${overallPressRate.toFixed(1)}%`)
-    console.log('=== END CALIBRATION ANALYSIS ===')
   }, [])
 
   // Handle trial completion
@@ -128,16 +122,6 @@ export default function CalibrationPage() {
     // Verify that visual guidance matches required guidance
     const visualGuidance = currentDirection
     const guidanceMatches = visualGuidance === requiredDirection
-    console.log(`Guidance Verification:`)
-    console.log(`  Visual Guidance (on screen): ${visualGuidance}`)
-    console.log(`  Required Guidance (stored): ${requiredDirection}`)
-    console.log(`  Guidance Matches: ${guidanceMatches ? 'YES' : 'NO'}`)
-    // Console logging for trial results
-    console.log(`Trial ${currentTrial} Results:`)
-    console.log(`  Required Direction: ${requiredDirection}`)
-    console.log(`  User Direction: ${userDirection}`)
-    console.log(`  Result: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`)
-    console.log(`  Captured Key: ${rawKey ?? '(no key)'}`)
     if (mode === 'training') {
       if (!isCorrect) {
         setFeedback('Try Again - Adjust Focus')
@@ -152,7 +136,6 @@ export default function CalibrationPage() {
     }
     // Clear current direction first
     setCurrentDirection('')
-    console.log('Trial', currentTrial, 'completed. Direction cleared.')
     // Move to next trial or finish
     if (currentTrial < totalTrials) {
       setCurrentTrial(prev => prev + 1)
@@ -162,8 +145,6 @@ export default function CalibrationPage() {
         userInputRef.current = null
         setCurrentDirection(nextDirection)
         setCurrentTrialDirection(nextDirection) // Store the direction for this trial
-        console.log('Trial', currentTrial + 1, '- Current direction:', nextDirection)
-        console.log('Guidance set - Visual:', nextDirection, 'Stored:', nextDirection)
       }, 500) // 500ms delay before showing new direction
     } else {
       // All trials completed
@@ -210,8 +191,6 @@ export default function CalibrationPage() {
           userInputRef.current = null
           setCurrentDirection(nextDirection)
           setCurrentTrialDirection(nextDirection) // Store the direction for this trial
-          console.log('Training started. Trial 1 - Current direction:', nextDirection)
-          console.log('Training Guidance set - Visual:', nextDirection, 'Stored:', nextDirection)
         }, 500)
       } else {
         setIsRunning(false)
@@ -234,7 +213,6 @@ export default function CalibrationPage() {
     const initialDirection = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)]
     setCurrentDirection(initialDirection)
     setCurrentTrialDirection(initialDirection) // Store the direction for this trial
-    console.log('Session started. Current direction:', initialDirection)
     setFeedback('')
   }
 
