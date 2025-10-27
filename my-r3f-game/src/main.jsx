@@ -6,6 +6,7 @@ import "./styles.css"
 import HomePage from './pages/HomePage.jsx'
 import GamePage from './pages/GamePage.jsx'
 import CalibrationPage from './pages/CalibrationPage.jsx'
+import FlowPage from './pages/FlowPage.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/" element={<HomePage />} />
         <Route path="/pingpong" element={<GamePage />} />
         <Route path="/calibration" element={<CalibrationPage />} />
+        <Route path="/flow" element={<FlowPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

@@ -44,6 +44,23 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
+
+            <div className="project-card">
+              <div className="project-info">
+                <h3>Flow Diagram</h3>
+                <p>Interactive flow diagram built with React Flow</p>
+                <div className="project-features">
+                  <span className="feature-tag">Node Editor</span>
+                  <span className="feature-tag">Visual Diagram</span>
+                  <span className="feature-tag">Interactive</span>
+                </div>
+              </div>
+              <div className="project-actions">
+                <Link to="/flow" className="play-button">
+                  View Flow
+                </Link>
+              </div>
+            </div>
           </div>
           
         </main>
