@@ -136,11 +136,11 @@ export const GAME_CONFIG = {
     // Post-processing effects settings
     POSTPROCESSING: {
       N8AO: {
-        AO_RADIUS: 0.5,
-        INTENSITY: 2
+        AO_RADIUS: 0.3,
+        INTENSITY: 1
       },
       TILT_SHIFT: {
-        BLUR: 0.2
+        BLUR: 0.1
       }
     },
     

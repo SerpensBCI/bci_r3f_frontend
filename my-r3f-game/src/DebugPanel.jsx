@@ -19,7 +19,6 @@ export default function DebugPanel({
 
   // Game state controls
   const gameControls = useControls('Game State', {
-    score: { value: count, min: 0, max: 100, step: 1, disabled: true },
     difficulty: { 
       value: difficulty, 
       options: ['easy', 'medium', 'hard'],
@@ -32,27 +31,6 @@ export default function DebugPanel({
     showFPS: { 
       value: showFPS,
       onChange: (value) => onFPSToggle?.(value)
-    },
-    currentFPS: { 
-      value: fpsData?.current || 0, 
-      min: 0, 
-      max: 120, 
-      step: 0.1, 
-      disabled: true 
-    },
-    averageFPS: { 
-      value: fpsData?.average || 0, 
-      min: 0, 
-      max: 120, 
-      step: 0.1, 
-      disabled: true 
-    },
-    frameCount: { 
-      value: fpsData?.frameCount || 0, 
-      min: 0, 
-      max: 10000, 
-      step: 1, 
-      disabled: true 
     }
   })
 
@@ -64,13 +42,6 @@ export default function DebugPanel({
       max: 0, 
       step: 0.1,
       onChange: (value) => onSettingsChange?.('physicsSettings', 'gravity', [0, value, 0])
-    },
-    timeStep: { 
-      value: physicsSettings.timeStep, 
-      min: 0.001, 
-      max: 0.02, 
-      step: 0.001,
-      onChange: (value) => onSettingsChange?.('physicsSettings', 'timeStep', value)
     },
     ballRestitution: { 
       value: physicsSettings.ball.RESTITUTION, 
@@ -110,10 +81,6 @@ export default function DebugPanel({
       max: 10, 
       step: 0.1,
       onChange: (value) => onSettingsChange?.('renderingSettings', 'LIGHTING.SPOTLIGHT.INTENSITY', value)
-    },
-    backgroundColor: { 
-      value: renderingSettings.BACKGROUND.COLOR, 
-      onChange: (value) => onSettingsChange?.('renderingSettings', 'BACKGROUND.COLOR', value)
     }
   })
 
@@ -168,21 +135,6 @@ export default function DebugPanel({
     }
   })
 
-  // Control settings
-  const controlControls = useControls('Controls', {
-    hideCursor: { 
-      value: controlSettings.MOUSE.HIDE_DURING_GAME,
-      onChange: (value) => onSettingsChange?.('controlSettings', 'MOUSE.HIDE_DURING_GAME', value)
-    },
-    showWhenPaused: { 
-      value: controlSettings.MOUSE.SHOW_WHEN_PAUSED,
-      onChange: (value) => onSettingsChange?.('controlSettings', 'MOUSE.SHOW_WHEN_PAUSED', value)
-    },
-    pauseKey: { 
-      value: controlSettings.KEYBOARD.PAUSE_KEY,
-      onChange: (value) => onSettingsChange?.('controlSettings', 'KEYBOARD.PAUSE_KEY', value)
-    }
-  })
 
   // Control Stream debugging
   const controlStreamControls = useControls('Control Stream', {
