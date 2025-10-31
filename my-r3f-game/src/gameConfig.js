@@ -194,16 +194,94 @@ export const getDifficultySettings = (difficulty = 'medium') => {
   return GAME_CONFIG.GAMEPLAY.DIFFICULTY[difficulty.toUpperCase()] || GAME_CONFIG.GAMEPLAY.DIFFICULTY.MEDIUM
 }
 
+// Helper function to get physics settings from localStorage (React Flow) or defaults
+const getReactFlowPhysicsSettings = () => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null
+  }
+  
+  try {
+    const saved = localStorage.getItem('physicsSettings')
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch (e) {
+    console.warn('Failed to parse React Flow physics settings from localStorage', e)
+  }
+  
+  return null
+}
+
 // Helper function to get physics settings
 export const getPhysicsSettings = (difficulty = 'medium') => {
   const difficultySettings = getDifficultySettings(difficulty)
-  return {
+  
+  // Get React Flow settings from localStorage if available
+  const reactFlowSettings = getReactFlowPhysicsSettings()
+  
+  // Start with defaults from GAME_CONFIG
+  const baseSettings = {
     gravity: difficultySettings.gravity,
     timeStep: GAME_CONFIG.PHYSICS.TIME_STEP,
-    ball: GAME_CONFIG.PHYSICS.BALL,
-    paddle: GAME_CONFIG.PHYSICS.PADDLE,
-    boundaries: GAME_CONFIG.PHYSICS.BOUNDARIES
+    ball: { ...GAME_CONFIG.PHYSICS.BALL },
+    paddle: { ...GAME_CONFIG.PHYSICS.PADDLE },
+    boundaries: { ...GAME_CONFIG.PHYSICS.BOUNDARIES }
   }
+  
+  // If React Flow settings exist, merge them in
+  if (reactFlowSettings) {
+    // Update ball settings
+    if (reactFlowSettings.ballRadius !== undefined) {
+      baseSettings.ball.RADIUS = reactFlowSettings.ballRadius
+    }
+    if (reactFlowSettings.ballRestitution !== undefined) {
+      baseSettings.ball.RESTITUTION = reactFlowSettings.ballRestitution
+    }
+    if (reactFlowSettings.ballAngularDamping !== undefined) {
+      baseSettings.ball.ANGULAR_DAMPING = reactFlowSettings.ballAngularDamping
+    }
+    if (reactFlowSettings.ballCCD !== undefined) {
+      baseSettings.ball.CCD = reactFlowSettings.ballCCD
+    }
+    if (reactFlowSettings.ballCanSleep !== undefined) {
+      baseSettings.ball.CAN_SLEEP = reactFlowSettings.ballCanSleep
+    }
+    
+    // Update paddle settings
+    if (reactFlowSettings.paddleCollider !== undefined) {
+      baseSettings.paddle.CYLINDER_COLLIDER = [...reactFlowSettings.paddleCollider]
+    }
+    if (reactFlowSettings.paddleCCD !== undefined) {
+      baseSettings.paddle.CCD = reactFlowSettings.paddleCCD
+    }
+    if (reactFlowSettings.paddleCanSleep !== undefined) {
+      baseSettings.paddle.CAN_SLEEP = reactFlowSettings.paddleCanSleep
+    }
+    
+    // Update boundaries settings
+    if (reactFlowSettings.boundariesSize !== undefined) {
+      baseSettings.boundaries.SIZE = reactFlowSettings.boundariesSize
+    }
+    if (reactFlowSettings.boundariesThickness !== undefined) {
+      baseSettings.boundaries.THICKNESS = reactFlowSettings.boundariesThickness
+    }
+    if (reactFlowSettings.boundariesRestitution !== undefined) {
+      baseSettings.boundaries.RESTITUTION = reactFlowSettings.boundariesRestitution
+    }
+    
+    // Update gravity based on difficulty (React Flow stores separate values for each)
+    const gravityMap = {
+      'easy': 'gravityEasy',
+      'medium': 'gravityMedium',
+      'hard': 'gravityHard'
+    }
+    const gravityKey = gravityMap[difficulty.toLowerCase()]
+    if (gravityKey && reactFlowSettings[gravityKey]) {
+      baseSettings.gravity = [...reactFlowSettings[gravityKey]]
+    }
+  }
+  
+  return baseSettings
 }
 
 // Helper function to get rendering settings

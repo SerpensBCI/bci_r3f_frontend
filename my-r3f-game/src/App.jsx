@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import { useCallback, useRef, useState, useEffect } from "react"
+import { useCallback, useRef, useState, useEffect, useMemo } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Text, useGLTF, useTexture } from "@react-three/drei"
 import { Physics, RigidBody, CylinderCollider, CuboidCollider, BallCollider } from "@react-three/rapier"
@@ -41,11 +41,39 @@ export default function App({ ready, difficulty = 'medium', onRestart, onHome })
   const [debugSettings, setDebugSettings] = useState({})
   const [fpsData, setFpsData] = useState({ current: 0, average: 0, frameCount: 0 })
   const [showFPS, setShowFPS] = useState(true)
+  const [physicsRefreshKey, setPhysicsRefreshKey] = useState(0)
   const controlStream = useControlStream()
   
+  // Listen for localStorage changes from React Flow
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'physicsSettings') {
+        // Force re-read of physics settings from localStorage
+        setPhysicsRefreshKey(prev => prev + 1)
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    // Also listen for custom events (for same-tab updates)
+    const handleCustomStorageChange = () => {
+      setPhysicsRefreshKey(prev => prev + 1)
+    }
+    window.addEventListener('physicsSettingsUpdated', handleCustomStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('physicsSettingsUpdated', handleCustomStorageChange)
+    }
+  }, [])
+  
   // Use configuration system to get settings
+  // getPhysicsSettings now reads from localStorage (React Flow settings)
   const baseSettings = ready ? getDifficultySettings(difficulty) : getDifficultySettings('medium')
-  const basePhysicsSettings = ready ? getPhysicsSettings(difficulty) : getPhysicsSettings('medium')
+  // Make physics settings reactive to localStorage changes from React Flow
+  const basePhysicsSettings = useMemo(() => {
+    // physicsRefreshKey forces re-computation when React Flow updates localStorage
+    return ready ? getPhysicsSettings(difficulty) : getPhysicsSettings('medium')
+  }, [ready, difficulty, physicsRefreshKey])
   const baseRenderingSettings = getRenderingSettings()
   const baseUISettings = getUISettings()
   const baseControlSettings = getControlSettings()
