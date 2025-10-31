@@ -7,6 +7,7 @@ import { EffectComposer, N8AO, TiltShift2, ToneMapping } from "@react-three/post
 import { proxy, useSnapshot } from "valtio"
 import clamp from "lodash-es/clamp"
 import { easing } from "maath"
+import { useLocation } from "react-router-dom"
 import pingSound from "./resources/ping.mp3"
 import logo from "./resources/crossp.jpg"
 import bg from "./resources/bg.jpg"
@@ -34,6 +35,8 @@ export const state = proxy({
 })
 
 export default function App({ ready, difficulty = 'medium', onRestart, onHome }) {
+  const location = useLocation()
+  const isDebugMode = location.pathname.includes('/debug')
   const [isPaused, setIsPaused] = useState(false)
   const [debugSettings, setDebugSettings] = useState({})
   const [fpsData, setFpsData] = useState({ current: 0, average: 0, frameCount: 0 })
@@ -162,16 +165,16 @@ export default function App({ ready, difficulty = 'medium', onRestart, onHome })
   
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-    {/* FPS Overlay - HTML overlay not affected by 3D effects */}
+    {/* FPS Overlay - HTML overlay not affected by 3D effects - only shown in debug mode */}
     <FPSOverlay 
-      enabled={ready && showFPS} 
+      enabled={ready && showFPS && isDebugMode} 
       updateInterval={1000} 
       label="Ping Pong Game" 
       onFPSUpdate={handleFPSUpdate}
     />
     
-    {/* Debug panel - only shown when game is ready */}
-    {ready && (
+    {/* Debug panel - only shown when game is ready AND URL contains /debug */}
+    {ready && isDebugMode && (
       <DebugPanel
         difficulty={difficulty}
         settings={settings}

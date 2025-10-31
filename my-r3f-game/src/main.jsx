@@ -14,6 +14,7 @@ createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/pingpong" element={<GamePage />} />
+        <Route path="/pingpong/debug" element={<GamePage />} />
         <Route path="/calibration" element={<CalibrationPage />} />
         <Route path="/flow" element={<FlowPage />} />
       </Routes>

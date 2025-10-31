@@ -37,12 +37,12 @@ export interface ControlStreamApi {
 }
 
 export function useControlStream(explicitUrl?: string): ControlStreamApi {
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(false);
   const [state, setState] = useState<ControlStreamState>({
-    connection: 'connecting',
+    connection: 'closed',
     lastControlX: 0,
     smoothedControlX: 0,
-    statusMessage: 'Connecting…',
+    statusMessage: 'Disabled – enable in debug panel',
     reconnectAttempts: 0,
     canRetry: false,
     retryDelayMs: undefined,
@@ -78,7 +78,6 @@ export function useControlStream(explicitUrl?: string): ControlStreamApi {
     // Default to localhost:8765 for development
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const defaultUrl = `${protocol}://localhost:8765/ws`;
-    console.log('[control-stream] Using default URL:', defaultUrl);
     return defaultUrl;
   }, [explicitUrl]);
 
